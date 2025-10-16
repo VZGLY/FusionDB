@@ -1,0 +1,57 @@
+services:
+  db:
+    container_name: postgres-db
+    image: postgres:18
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'       # limite à 50% d’un CPU
+          memory: 512M      # limite mémoire à 512 mégaoctets
+        reservations:
+          cpus: '0.25'      # réservation de 25% d’un CPU
+          memory: 256M      # réservation mémoire de 256 mégaoctets
+    ports:
+      - "${DB_PORT_EXTERNAL}:5432"
+    networks:
+      - back-end-network
+    environment:
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_USER: $DB_USER
+      POSTGRES_DB: $DB_NAME
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-volume:/var/lib/postgresql/data
+
+  express:
+    container_name: express
+    image: localhost:5001/
+    ports:
+      - "${EXPRESS_PORT}:3000"
+    networks:
+      - back-end-network
+    environment:
+      PGUSER: $DB_USER
+      PGPASSWORD: $DB_PASSWORD
+      PGDATABASE: $DB_NAME
+      PGHOST: db
+      PGPORT: 5432
+    depends_on: 
+      - db
+
+  react:
+    container_name: react-app
+    build: 
+      context: ./react-app
+      args:
+        REACT_APP_API_URL: ${EXPRESS_URL}
+    ports:
+      - "${REACT_PORT}:80"
+    
+      
+
+volumes:
+  db-volume:
+
+networks:
+  back-end-network:
+    

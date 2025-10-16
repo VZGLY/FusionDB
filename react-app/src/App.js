@@ -9,6 +9,8 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log(API_URL);
+    
     fetch(`${API_URL}/persons`)
       .then(response => response.json())
       .then(data => {
