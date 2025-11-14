@@ -1,0 +1,47 @@
+name: Fusion
+
+services:
+  db:
+    container_name: postgres_db
+    build: /database
+    volumes:
+      - db_volume:/var/lib/postgresql
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+    networks:
+      - db_api_network
+    environment:
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PWD
+      POSTGRES_DB: $DB_NAME
+  api:
+    container_name: express_api
+    build: /express
+    ports:
+      - "${EXPRESS_EXTERNAL_PORT}:3000"
+    networks:
+      - db_api_network
+    environment:
+      PGUSER: $DB_USER
+      PGPASSWORD: $DB_PWD
+      PGHOST: db
+      PGDATABASE: $DB_NAME
+      PGPORT: 5432
+      PORT: 3000
+    depends_on:
+      - db
+  
+  web:
+    container_name: react_web
+    build: 
+      context: /react-app
+      args:
+        REACT_APP_API_URL: "${EXPRESS_URL}:${EXPRESS_EXTERNAL_PORT}"
+    ports:
+      - "${REACT_EXTERNAL_PORT}:80"
+
+networks:
+  db_api_network:
+
+volumes:
+  db_volume:
